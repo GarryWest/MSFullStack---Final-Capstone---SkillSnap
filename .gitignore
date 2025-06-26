@@ -41,3 +41,5 @@ coverage/
 .env
 appsettings.Development.json
 SkillSnap.Api/skillsnap.db
+SkillSnap.Api/skillsnap.db-shm
+SkillSnap.Api/skillsnap.db-wal
