@@ -1,30 +1,63 @@
-@* A simple list of project cards *@
-@code {
-    private List<Project> projects = new()
-    {
-        new Project { Title = "Portfolio Website", Description = "A personal site to showcase my work.", ImageUrl = "https://via.placeholder.com/300x200" },
-        new Project { Title = "Task Manager", Description = "A Blazor-based app for managing daily tasks.", ImageUrl = "https://via.placeholder.com/300x200" },
-        new Project { Title = "Weather Dashboard", Description = "Displays weather data using a public API.", ImageUrl = "https://via.placeholder.com/300x200" }
-    };
+@page "/projects"
+@using SkillSnap.Shared.Models
+@inject ProjectService ProjectService
 
-    private class Project
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
-    }
+<h3 class="mb-4">Projects</h3>
+
+@if (projects is null)
+{
+    <p>Loading projects...</p>
 }
-<div class="row">
-    @foreach (var project in projects)
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <img src="@project.ImageUrl" class="card-img-top" alt="@project.Title" />
-                <div class="card-body">
-                    <h5 class="card-title">@project.Title</h5>
-                    <p class="card-text">@project.Description</p>
+else if (!projects.Any())
+{
+    <p>No projects found.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var project in projects)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="@project.ImageUrl" class="card-img-top" alt="@project.Title" />
+                    <div class="card-body">
+                        <h5 class="card-title">@project.Title</h5>
+                        <p class="card-text">@project.Description</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public bool RefreshRequested { get; set; }
+
+    private List<Project>? projects;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (RefreshRequested)
+        {
+            await LoadProjectsAsync();
+        }
     }
-</div>
+
+    private async Task LoadProjectsAsync()
+    {
+        try
+        {
+            projects = await ProjectService.GetProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading projects: {ex.Message}");
+            projects = new List<Project>();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjectsAsync();
+    }
+}

@@ -1,0 +1,68 @@
+@page "/skills"
+@using SkillSnap.Shared.Models
+@inject SkillService SkillService
+
+<h3 class="mb-3">All Skills</h3>
+
+@if (skills is null)
+{
+    <p>Loading skills...</p>
+}
+else if (!skills.Any())
+{
+    <p>No skills found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Level</th>
+                <th>User</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var skill in skills)
+            {
+                <tr>
+                    <td>@skill.Name</td>
+                    <td>@skill.Level</td>
+                    <td>@skill.PortfolioUser?.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public bool RefreshRequested { get; set; }
+
+    private List<Skill>? skills;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (RefreshRequested)
+        {
+            await LoadSkillsAsync();
+        }
+    }
+
+    private async Task LoadSkillsAsync()
+    {
+        try
+        {
+            skills = await SkillService.GetSkillsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading skills: {ex.Message}");
+            skills = new List<Skill>();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSkillsAsync();
+    }
+}

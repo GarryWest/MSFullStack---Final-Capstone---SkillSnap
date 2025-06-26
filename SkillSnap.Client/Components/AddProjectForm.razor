@@ -1,0 +1,35 @@
+@using SkillSnap.Shared.Models
+@inject ProjectService ProjectService
+@code {
+    [Parameter] public EventCallback OnProjectAdded { get; set; }
+    [Parameter] public int PortfolioUserId { get; set; }
+
+    private Project newProject = new();
+
+    private async Task HandleSubmit()
+    {
+        newProject.PortfolioUserId = PortfolioUserId;
+        await ProjectService.AddProjectAsync(newProject);
+        newProject = new(); // reset form
+        await OnProjectAdded.InvokeAsync();
+    }
+}
+
+<EditForm Model="newProject" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-2">
+        <label class="form-label">Title</label>
+        <InputText class="form-control" @bind-Value="newProject.Title" />
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Description</label>
+        <InputText class="form-control" @bind-Value="newProject.Description" />
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Image URL</label>
+        <InputText class="form-control" @bind-Value="newProject.ImageUrl" />
+    </div>
+    <button type="submit" class="btn btn-success">Save Project</button>
+</EditForm>

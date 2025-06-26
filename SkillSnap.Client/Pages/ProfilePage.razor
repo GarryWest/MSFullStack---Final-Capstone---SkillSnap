@@ -1,0 +1,76 @@
+@page "/profile"
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Components
+@inject ProjectService ProjectService
+@inject SkillService SkillService
+
+<h2 class="mb-4">Developer Profile</h2>
+
+<ProfileCard />
+
+<hr />
+
+<h4 class="mt-4">Projects</h4>
+
+<button class="btn btn-primary mb-3 me-2" @onclick="ToggleProjectForm">
+    <i class="bi bi-plus-circle me-1"></i> Add Project
+</button>
+
+@if (showProjectForm)
+{
+    <AddProjectForm PortfolioUserId="1" OnProjectAdded="HandleProjectRefresh" />
+}
+
+<ProjectList RefreshRequested="@refreshProjects" />
+
+
+
+<hr />
+
+<h4 class="mt-4">Skills</h4>
+
+<button class="btn btn-primary mb-3 me-2" @onclick="ToggleSkillForm">
+    <i class="bi bi-plus-circle me-1"></i> Add Skill
+</button>
+
+@if (showSkillForm)
+{
+    <AddSkillForm PortfolioUserId="1" OnSkillAdded="HandleSkillRefresh" />
+}
+
+<SkillsList RefreshRequested="@refreshSkills" />
+
+
+
+@code {
+    private bool showProjectForm = false;
+    private bool showSkillForm = false;
+    private bool refreshProjects = false;
+    private bool refreshSkills = false;
+
+    private void ToggleProjectForm()
+    {
+        showProjectForm = !showProjectForm;
+    }
+
+    private void ToggleSkillForm()
+    {
+        showSkillForm = !showSkillForm;
+    }
+    
+    private async Task HandleProjectRefresh()
+    {
+        refreshProjects = false;
+        await Task.Delay(1); // force re-render
+        refreshProjects = true;
+    }
+
+    private async Task HandleSkillRefresh()
+    {
+        refreshSkills = false;
+        await Task.Delay(1);
+        refreshSkills = true;
+    }
+
+
+}

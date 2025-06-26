@@ -1,0 +1,31 @@
+@using SkillSnap.Shared.Models
+@inject SkillService SkillService
+@code {
+    [Parameter] public EventCallback OnSkillAdded { get; set; }
+    [Parameter] public int PortfolioUserId { get; set; }
+
+    private Skill newSkill = new();
+
+    private async Task HandleSubmit()
+    {
+        newSkill.PortfolioUserId = PortfolioUserId;
+        await SkillService.AddSkillAsync(newSkill);
+        newSkill = new();
+        await OnSkillAdded.InvokeAsync();
+    }
+}
+
+<EditForm Model="newSkill" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-2">
+        <label class="form-label">Name</label>
+        <InputText class="form-control" @bind-Value="newSkill.Name" />
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Level</label>
+        <InputText class="form-control" @bind-Value="newSkill.Level" />
+    </div>
+    <button type="submit" class="btn btn-success">Save Skill</button>
+</EditForm>

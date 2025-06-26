@@ -1,18 +1,37 @@
-@* A tag-style list of skills *@
-@code {
-    private List<string> skills = new()
-    {
-        "C#",
-        "Blazor",
-        "Entity Framework",
-        "JavaScript",
-        "SQL",
-        "Azure"
-    };
+@inject SkillService SkillService
+@using SkillSnap.Shared.Models;
+
+@if (skills is null)
+{
+    <p>Loading skills...</p>
 }
-<div class="d-flex flex-wrap gap-2">
-    @foreach (var skill in skills)
+else if (!skills.Any())
+{
+    <p>No skills found.</p>
+}
+else
+{
+    <div class="d-flex flex-wrap gap-2">
+        @foreach (var skill in skills)
+        {
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill">@skill.Name</span>
+        }
+    </div>
+}
+
+@code {
+    private List<Skill>? skills;
+
+    protected override async Task OnInitializedAsync()
     {
-        <span class="badge bg-primary text-white px-3 py-2 rounded-pill">@skill</span>
+        try
+        {
+            skills = await SkillService.GetSkillsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading skills: {ex.Message}");
+            skills = new(); // fallback to empty list
+        }
     }
-</div>
+}
