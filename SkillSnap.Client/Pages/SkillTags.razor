@@ -1,0 +1,18 @@
+@* A tag-style list of skills *@
+@code {
+    private List<string> skills = new()
+    {
+        "C#",
+        "Blazor",
+        "Entity Framework",
+        "JavaScript",
+        "SQL",
+        "Azure"
+    };
+}
+<div class="d-flex flex-wrap gap-2">
+    @foreach (var skill in skills)
+    {
+        <span class="badge bg-primary text-white px-3 py-2 rounded-pill">@skill</span>
+    }
+</div>

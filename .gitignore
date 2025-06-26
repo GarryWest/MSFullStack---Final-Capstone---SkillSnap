@@ -1,0 +1,43 @@
+# Ignore build output directories
+bin/
+obj/
+
+# Ignore user-specific files
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Ignore dependency directories
+node_modules/
+wwwroot/
+
+# Ignore publish output
+publish/
+
+# Ignore logs
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore Rider project files
+.idea/
+*.sln.iml
+
+# Ignore Visual Studio Code workspace settings
+.vscode/
+
+# Ignore local history
+.localhistory/
+
+# Ignore coverage reports
+coverage/
+*.lcov
+
+# Ignore environment variables
+.env
+appsettings.Development.json
+SkillSnap.Api/skillsnap.db

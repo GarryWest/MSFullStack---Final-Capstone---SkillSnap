@@ -1,0 +1,8 @@
+@SkillSnap.Api_HostAddress = http://localhost:5072
+
+GET {{SkillSnap.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+POST {{SkillSnap.Api_HostAddress}}/api/seed
+Content-Type: application/json
