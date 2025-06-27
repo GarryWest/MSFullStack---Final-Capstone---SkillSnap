@@ -1,0 +1,27 @@
+@page "/login"
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Services
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<EditForm Model="model" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="model.Email" class="form-control mb-2" placeholder="Email" />
+    <InputText @bind-Value="model.Password" type="password" class="form-control mb-2" placeholder="Password" />
+    <button class="btn btn-primary">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel model = new();
+
+    private async Task HandleLogin()
+    {
+        var success = await AuthService.LoginAsync(model);
+        if (success)
+            Nav.NavigateTo("/profile");
+    }
+}

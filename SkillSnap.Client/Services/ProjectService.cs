@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using SkillSnap.Shared.Models;
 
+namespace SkillSnap.Client.Services;
+
 public class ProjectService
 {
     private readonly HttpClient _httpClient;

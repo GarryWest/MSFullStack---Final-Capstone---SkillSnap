@@ -67,11 +67,20 @@ builder.Services.AddCors(options =>
     });
 });
 
+// For automatic seeding of sample data
+builder.Services.AddScoped<DatabaseSeeder>();
 #endregion
 
 #region App pipeline
 var app = builder.Build();
 
+// Run the database seeder
+// This should be done before any other middleware that might depend on the database being seeded
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -1,0 +1,27 @@
+@page "/register"
+@using SkillSnap.Shared.Models
+@using SkillSnap.Client.Services
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<h3>Register</h3>
+
+<EditForm Model="model" OnValidSubmit="HandleRegister">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="model.Email" class="form-control mb-2" placeholder="Email" />
+    <InputText @bind-Value="model.Password" type="password" class="form-control mb-2" placeholder="Password" />
+    <button class="btn btn-success">Register</button>
+</EditForm>
+
+@code {
+    private RegisterModel model = new();
+
+    private async Task HandleRegister()
+    {
+        var success = await AuthService.RegisterAsync(model);
+        if (success)
+            Nav.NavigateTo("/login");
+    }
+}

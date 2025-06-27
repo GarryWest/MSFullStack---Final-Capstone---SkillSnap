@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SkillSnap.Shared.Models;
 using SkillSnap.Api.Data;
+using Microsoft.AspNetCore.Identity;
 namespace SkillSnap.Api.Controllers
 {
     [ApiController]
@@ -8,13 +9,30 @@ namespace SkillSnap.Api.Controllers
     public class SeedController : ControllerBase
     {
         private readonly SkillSnapContext _context;
-        public SeedController(SkillSnapContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IWebHostEnvironment _env;
+
+        public SeedController(
+            SkillSnapContext context,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IWebHostEnvironment env)
         {
             _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _env = env;
         }
         [HttpPost]
-        public IActionResult Seed()
+        public async Task<IActionResult> Seed()
         {
+            // Check if the environment is development
+            if (!_env.IsDevelopment())
+            {
+                return NotFound();
+            }
+
             if (_context.PortfolioUsers.Any())
             {
                 return BadRequest("Sample data already exists.");
@@ -73,7 +91,48 @@ namespace SkillSnap.Api.Controllers
             };
 
             _context.PortfolioUsers.AddRange(users);
-            _context.SaveChanges();
+
+            // 1. Create Admin role if it doesn't exist
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            }
+
+            // 2. Create Admin user
+            var adminEmail = "admin@skillsnap.io";
+            var adminUser = await _userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
+            {
+                adminUser = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    EmailConfirmed = true
+                };
+
+                var result = await _userManager.CreateAsync(adminUser, "Admin*123");
+                if (!result.Succeeded)
+                    return BadRequest(result.Errors);
+            }
+
+            // 3. Assign Admin role
+            if (!await _userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+
+            // 4. Link to a PortfolioUser
+            var adminProfile = new PortfolioUser
+            {
+                Name = "Admin User",
+                Bio = "System administrator",
+                ProfileImageUrl = "https://example.com/images/admin.png",
+                ApplicationUserId = adminUser.Id
+            };
+
+            _context.PortfolioUsers.Add(adminProfile);
+
+            await _context.SaveChangesAsync();
 
             return Ok("Sample data inserted.");
         }
