@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SkillSnap.Shared.Models;
 
 namespace SkillSnap.Api.Data
 {
-    public class SkillSnapContext : DbContext
+    public class SkillSnapContext : IdentityDbContext<ApplicationUser>
     {
         public SkillSnapContext(DbContextOptions<SkillSnapContext> options)
             : base(options)
@@ -28,6 +29,11 @@ namespace SkillSnap.Api.Data
                 .HasMany(p => p.Skills)
                 .WithOne(s => s.PortfolioUser)
                 .HasForeignKey(s => s.PortfolioUserId);
+
+            modelBuilder.Entity<PortfolioUser>()
+                .HasOne(p => p.ApplicationUser)
+                .WithOne(u => u.PortfolioProfile)
+                .HasForeignKey<PortfolioUser>(p => p.ApplicationUserId);
         }
     }
 }

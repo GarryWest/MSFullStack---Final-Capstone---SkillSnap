@@ -17,4 +17,7 @@ public class PortfolioUser
     public List<Project> Projects { get; set; } = new();
 
     public List<Skill> Skills { get; set; } = new();
+    [ForeignKey("ApplicationUser")]
+    public string? ApplicationUserId { get; set; }
+    public ApplicationUser? ApplicationUser { get; set; }
 }

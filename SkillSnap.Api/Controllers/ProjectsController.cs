@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SkillSnap.Api.Data;
 using SkillSnap.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace SkillSnap.Api.Controllers
 {
@@ -15,6 +17,7 @@ namespace SkillSnap.Api.Controllers
             _context = context;
         }
 
+        [Authorize]
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -23,6 +26,7 @@ namespace SkillSnap.Api.Controllers
             return Ok(projects);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult Add(Project project)
         {
