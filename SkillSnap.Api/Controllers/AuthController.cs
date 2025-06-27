@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using SkillSnap.Api.Services;
 using SkillSnap.Shared.Models;
 
 namespace SkillSnap.Api.Controllers;
@@ -16,12 +17,15 @@ public class AuthController : ControllerBase
     private readonly SignInManager<ApplicationUser> _signInManager;
 
     private readonly IConfiguration _config;
+    private readonly JwtTokenService _jwtService;
 
-    public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration config)
+
+    public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration config, JwtTokenService jwtService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _config = config;
+        _jwtService = jwtService;
     }
 
     [HttpPost("register")]
@@ -49,23 +53,10 @@ public class AuthController : ControllerBase
         new Claim(JwtRegisteredClaimNames.Sub, user.Id),
         new Claim(JwtRegisteredClaimNames.Email, user.Email!),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+        };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _config["JwtSettings:Issuer"],
-            audience: _config["JwtSettings:Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(double.Parse(_config["JwtSettings:ExpiresInMinutes"])),
-            signingCredentials: creds
-        );
-
-        return Ok(new
-        {
-            token = new JwtSecurityTokenHandler().WriteToken(token)
-        });
+        var token = _jwtService.GenerateToken(user);
+        return Ok(new { token });
     }
 
     [HttpPost("logout")]
