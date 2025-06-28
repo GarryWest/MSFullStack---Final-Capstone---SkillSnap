@@ -5,7 +5,13 @@
 
 <h3 class="mb-4">Projects</h3>
 
-@if (projects is null)
+@if (unauthorized)
+{
+    <div class="alert alert-warning">
+        You must be logged in to view your projects.
+    </div>
+}
+else if (projects is null)
 {
     <p>Loading projects...</p>
 }
@@ -35,6 +41,7 @@ else
     [Parameter] public bool RefreshRequested { get; set; }
 
     private List<Project>? projects;
+    private bool unauthorized = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -47,7 +54,9 @@ else
     private async Task LoadProjectsAsync()
     {
         try
-        {
+        {   
+            ProjectService.OnUnauthorized += HandleUnauthorized;
+
             projects = await ProjectService.GetProjectsAsync();
         }
         catch (Exception ex)
@@ -56,6 +65,19 @@ else
             projects = new List<Project>();
         }
     }
+
+    private void HandleUnauthorized()
+    {
+        unauthorized = true;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ProjectService.OnUnauthorized -= HandleUnauthorized;
+    }
+
+
 
     protected override async Task OnInitializedAsync()
     {

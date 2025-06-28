@@ -1,7 +1,5 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Security.Claims;
-using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.JSInterop;
 using SkillSnap.Shared.Models;
@@ -14,12 +12,15 @@ public class AuthService
     private readonly IJSRuntime _js;
 
     private const string TokenKey = "authToken";
+    private readonly CustomAuthStateProvider _authStateProvider;
 
-    public AuthService(HttpClient http, IJSRuntime js)
+    public AuthService(HttpClient http, IJSRuntime js, CustomAuthStateProvider authStateProvider)
     {
         _http = http;
         _js = js;
+        _authStateProvider = authStateProvider;
     }
+
 
     public async Task<bool> LoginAsync(LoginModel model)
     {
@@ -31,6 +32,7 @@ public class AuthService
 
         await _js.InvokeVoidAsync("localStorage.setItem", TokenKey, result.Token);
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.Token);
+        _authStateProvider.NotifyUserAuthentication(result.Token);
         return true;
     }
 
@@ -38,6 +40,7 @@ public class AuthService
     {
         await _js.InvokeVoidAsync("localStorage.removeItem", TokenKey);
         _http.DefaultRequestHeaders.Authorization = null;
+        _authStateProvider.NotifyUserLogout();
     }
 
     public async Task<bool> RegisterAsync(RegisterModel model)
@@ -75,5 +78,25 @@ public class AuthService
         return jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value;
     }
 
+    public async Task<T?> HandleApiCall<T>(Func<Task<HttpResponseMessage>> apiCall, Action? onUnauthorized = null)
+    {
+        try
+        {
+            var response = await apiCall();
 
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                onUnauthorized?.Invoke();
+                return default;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<T>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"API call failed: {ex.Message}");
+            return default;
+        }
+    }
 }
