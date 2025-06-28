@@ -1,7 +1,9 @@
 ﻿@using SkillSnap.Client.Services
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UserStateService UserState
 @inject AuthService AuthService
 @inject NavigationManager Nav
-
 
 <div class="top-row ps-3 navbar navbar-dark bg-dark">
     <div class="container-fluid">
@@ -34,55 +36,42 @@
                 <span class="bi bi-tags-fill me-2" aria-hidden="true"></span> Skills
             </NavLink>
         </div>
-        @if (!isLoggedIn)
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="login">
-                    <span class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></span> Login
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="register">
-                    <span class="bi bi-person-plus-fill me-2" aria-hidden="true"></span> Register
-                </NavLink>
-            </div>
-        }
-        else
-        {
-            @if (isLoggedIn)
-            {
+
+        <AuthorizeView>
+            <Authorized>
                 <div class="nav-item px-3 text-white-50 ps-3 small">
-                    Signed in as <strong>@userEmail</strong>
+                    Signed in as <strong>@UserState.Email</strong>
+                    @if (UserState.IsAuthenticated)
+                    {
+                        <p>Welcome, @UserState.Name!</p>
+                        <p>Your roles: @string.Join(", ", UserState.Roles)</p>
+                    }
                 </div>
-            }
-            <div class="nav-item px-3">
-                <a class="nav-link" href="#" @onclick="Logout">
-                    <span class="bi bi-box-arrow-right me-2" aria-hidden="true"></span> Logout
-                </a>
-            </div>
-        }
+                <div class="nav-item px-3">
+                    <a class="nav-link" href="#" @onclick="Logout">
+                        <span class="bi bi-box-arrow-right me-2" aria-hidden="true"></span> Logout
+                    </a>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">
+                        <span class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="register">
+                        <span class="bi bi-person-plus-fill me-2" aria-hidden="true"></span> Register
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
-
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private bool isLoggedIn;
-    private string? userEmail;
-    private List<string> userRoles = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await AuthService.InitializeAsync();
-        isLoggedIn = AuthService.IsAuthenticated();
-
-        if (isLoggedIn)
-        {
-            userEmail = await AuthService.GetUserEmailAsync();
-        }
-    }
 
     private void ToggleNavMenu()
     {
@@ -92,9 +81,6 @@
     private async Task Logout()
     {
         await AuthService.LogoutAsync();
-        isLoggedIn = false;
         Nav.NavigateTo("/");
     }
-
-
 }

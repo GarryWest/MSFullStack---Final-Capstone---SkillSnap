@@ -9,9 +9,10 @@
 <EditForm Model="model" OnValidSubmit="HandleRegister">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
+    <InputText @bind-Value="model.UserName" class="form-control mb-2" placeholder="Username" />
     <InputText @bind-Value="model.Email" class="form-control mb-2" placeholder="Email" />
     <InputText @bind-Value="model.Password" type="password" class="form-control mb-2" placeholder="Password" />
+    <InputText @bind-Value="model.ConfirmPassword" type="password" class="form-control mb-2" placeholder="Confirm Password" />
     <button class="btn btn-success">Register</button>
 </EditForm>
 

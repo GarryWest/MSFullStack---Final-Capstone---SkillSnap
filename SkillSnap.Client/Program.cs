@@ -14,7 +14,6 @@ builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
     provider.GetRequiredService<CustomAuthStateProvider>());
 
-//builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5072") });
 builder.Services.AddTransient<JwtAuthorizationMessageHandler>();
 
 builder.Services.AddHttpClient<AuthService>(client =>
@@ -33,6 +32,9 @@ builder.Services.AddHttpClient<SkillService>(client =>
     client.BaseAddress = new Uri("http://localhost:5072/");
 })
 .AddHttpMessageHandler<JwtAuthorizationMessageHandler>();
+
+// Register UserStateService to manage user state
+builder.Services.AddScoped<UserStateService>();
 
 
 await builder.Build().RunAsync();

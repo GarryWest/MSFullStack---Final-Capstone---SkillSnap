@@ -29,7 +29,12 @@ public class JwtTokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Iss, _jwtSettings["Issuer"]!)
+            new Claim(JwtRegisteredClaimNames.Iss, _jwtSettings["Issuer"]!),
+            // 👇 Add these for .NET compatibility
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.UserName!) // or user.Name if available
+
             //new Claim(JwtRegisteredClaimNames.Aud, _jwtSettings["Audience"]!)
         };
 

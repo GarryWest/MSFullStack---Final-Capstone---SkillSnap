@@ -9,7 +9,6 @@
 <EditForm Model="model" OnValidSubmit="HandleLogin">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
     <InputText @bind-Value="model.Email" class="form-control mb-2" placeholder="Email" />
     <InputText @bind-Value="model.Password" type="password" class="form-control mb-2" placeholder="Password" />
     <button class="btn btn-primary">Login</button>
