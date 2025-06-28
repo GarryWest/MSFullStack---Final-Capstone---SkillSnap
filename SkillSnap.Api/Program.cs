@@ -61,14 +61,14 @@ builder.Services.AddAuthentication(options =>
 
 
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return Task.CompletedTask;
-    };
-});
+// builder.Services.ConfigureApplicationCookie(options =>
+// {
+//     options.Events.OnRedirectToLogin = context =>
+//     {
+//         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+//         return Task.CompletedTask;
+//     };
+// });
 
 
 builder.Services.AddScoped<JwtTokenService>();
@@ -79,21 +79,23 @@ builder.Services.AddScoped<JwtTokenService>();
 
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<SkillSnapContext>();
-
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode = 401;
-        return Task.CompletedTask;
-    };
-    options.Events.OnRedirectToAccessDenied = context =>
-    {
-        context.Response.StatusCode = 403;
-        return Task.CompletedTask;
-    };
-});
+    .AddSignInManager<SignInManager<ApplicationUser>>() // 👈 Add this
+    .AddEntityFrameworkStores<SkillSnapContext>()
+    .AddDefaultTokenProviders();
+    
+// builder.Services.ConfigureApplicationCookie(options =>
+// {
+//     options.Events.OnRedirectToLogin = context =>
+//     {
+//         context.Response.StatusCode = 401;
+//         return Task.CompletedTask;
+//     };
+//     options.Events.OnRedirectToAccessDenied = context =>
+//     {
+//         context.Response.StatusCode = 403;
+//         return Task.CompletedTask;
+//     };
+// });
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -146,25 +148,25 @@ app.UseHttpsRedirection();
 // Enable CORS
 app.UseCors("AllowClient");
 
-app.Use(async (context, next) =>
-{
-    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-    Console.WriteLine($"🔍 Incoming Authorization header: {authHeader}");
-    await next();
-});
+// app.Use(async (context, next) =>
+// {
+//     var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+//     Console.WriteLine($"🔍 Incoming Authorization header: {authHeader}");
+//     await next();
+// });
 
 app.UseAuthentication(); // 👈 before UseAuthorization
 app.UseAuthorization();
 
-app.Use(async (context, next) =>
-{
-    await next();
+// app.Use(async (context, next) =>
+// {
+//     await next();
 
-    if (context.Response.StatusCode == 401)
-    {
-        Console.WriteLine("⚠️  401 Unauthorized response returned.");
-    }
-});
+//     if (context.Response.StatusCode == 401)
+//     {
+//         Console.WriteLine("⚠️  401 Unauthorized response returned.");
+//     }
+// });
 
 
 app.MapControllers();

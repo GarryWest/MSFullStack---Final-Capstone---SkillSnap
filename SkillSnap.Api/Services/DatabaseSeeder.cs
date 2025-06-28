@@ -26,6 +26,12 @@ public class DatabaseSeeder
 
     public async Task SeedAsync()
     {
+        // 1. Create User role if it doesn't exist
+        if (!await _roleManager.RoleExistsAsync("User"))
+        {
+            await _roleManager.CreateAsync(new IdentityRole("User"));
+        }
+
         if (!_env.IsDevelopment()) return;
 
         if (_context.PortfolioUsers.Any()) return;
