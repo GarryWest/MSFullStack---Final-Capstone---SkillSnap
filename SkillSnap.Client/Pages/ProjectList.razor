@@ -30,6 +30,7 @@ else
                     <div class="card-body">
                         <h5 class="card-title">@project.Title</h5>
                         <p class="card-text">@project.Description</p>
+                        <p class="card-text">Assigned to: @project.PortfolioUserName</p>
                     </div>
                 </div>
             </div>
@@ -40,7 +41,7 @@ else
 @code {
     [Parameter] public bool RefreshRequested { get; set; }
 
-    private List<Project>? projects;
+    private List<ProjectDto>? projects;
     private bool unauthorized = false;
 
     protected override async Task OnParametersSetAsync()
@@ -62,7 +63,7 @@ else
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading projects: {ex.Message}");
-            projects = new List<Project>();
+            projects = new List<ProjectDto>();
         }
     }
 

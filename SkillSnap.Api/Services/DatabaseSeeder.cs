@@ -26,11 +26,7 @@ public class DatabaseSeeder
 
     public async Task SeedAsync()
     {
-        // 1. Create User role if it doesn't exist
-        if (!await _roleManager.RoleExistsAsync("User"))
-        {
-            await _roleManager.CreateAsync(new IdentityRole("User"));
-        }
+        await SeedRolesAsync();
 
         if (!_env.IsDevelopment()) return;
 
@@ -90,13 +86,7 @@ public class DatabaseSeeder
 
         _context.PortfolioUsers.AddRange(users);
 
-        // 1. Create Admin role if it doesn't exist
-        if (!await _roleManager.RoleExistsAsync("Admin"))
-        {
-            await _roleManager.CreateAsync(new IdentityRole("Admin"));
-        }
-
-        // 2. Create Admin user
+        // 1. Create Admin user
         var adminEmail = "admin@skillsnap.io";
         var adminUser = await _userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
@@ -113,7 +103,7 @@ public class DatabaseSeeder
                 return; // BadRequest("Failed to create admin user.");
         }
 
-        // 3. Assign Admin role
+        // 2. Assign Admin role
         if (!await _userManager.IsInRoleAsync(adminUser, "Admin"))
         {
             await _userManager.AddToRoleAsync(adminUser, "Admin");
@@ -121,7 +111,7 @@ public class DatabaseSeeder
         // Save changes to the context so we can link the admin user to a PortfolioUser
         _context.SaveChanges();
 
-        // 4. Link to a PortfolioUser
+        // 3. Link to a PortfolioUser
         var adminProfile = new PortfolioUser
         {
             Name = "Admin User",
@@ -131,6 +121,78 @@ public class DatabaseSeeder
         };
 
         _context.PortfolioUsers.Add(adminProfile);
+
+        await _context.SaveChangesAsync();
+        Console.WriteLine("Sample data inserted successfully.");
+
+        return; // Ok("Sample data inserted.");
+    }
+
+    public async Task SeedRolesAsync()
+    {
+        if (!await _roleManager.RoleExistsAsync("User"))
+        {
+            await _roleManager.CreateAsync(new IdentityRole("User"));
+        }
+
+        if (!await _roleManager.RoleExistsAsync("Admin"))
+        {
+            await _roleManager.CreateAsync(new IdentityRole("Admin"));
+        }
+    }
+
+    public async Task SeedUsersAsync()
+    {
+        if (!_env.IsDevelopment()) return;
+
+        // 1. Create test user
+        var testEmail = "test@skillsnap.io";
+        var testUser = await _userManager.FindByEmailAsync(testEmail);
+        if (testUser == null)
+        {
+            testUser = new ApplicationUser
+            {
+                UserName = testEmail,
+                Email = testEmail,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(testUser, "Admin*123");
+            if (!result.Succeeded)
+                return; // BadRequest("Failed to create admin user.");
+        }
+
+        // 2. Assign Admin role
+        if (!await _userManager.IsInRoleAsync(testUser, "User"))
+        {
+            await _userManager.AddToRoleAsync(testUser, "User");
+        }
+        // Save changes to the context so we can link the admin user to a PortfolioUser
+        _context.SaveChanges();
+
+        // 3. Link to a PortfolioUser
+        List<Project> projects = new List<Project>();
+        for (int i = 1; i <= 100; i++)
+        {
+            projects.Add(new Project
+            {
+                Title = $"Test Project {i}",
+                Description = $"This is a test project {i}",
+                ImageUrl = $"https://example.com/images/test_project_{i}.png"
+            });
+        }
+
+
+        var testProfile = new PortfolioUser
+        {
+            Name = "Test User",
+            Bio = "Test Drone",
+            ProfileImageUrl = "https://example.com/images/test.png",
+            ApplicationUserId = testUser.Id,
+            Projects = projects
+        };
+
+        _context.PortfolioUsers.Add(testProfile);
 
         await _context.SaveChangesAsync();
         Console.WriteLine("Sample data inserted successfully.");

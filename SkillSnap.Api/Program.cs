@@ -22,6 +22,11 @@ var jwtSettings = config.GetSection("JwtSettings");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
 // Add services to the container.
+
+// Register the MemoryCache service
+// This is useful for caching data in memory, such as user sessions or frequently accessed data
+builder.Services.AddMemoryCache();
+
 // Configure JWT authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -59,43 +64,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
-
-// builder.Services.ConfigureApplicationCookie(options =>
-// {
-//     options.Events.OnRedirectToLogin = context =>
-//     {
-//         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-//         return Task.CompletedTask;
-//     };
-// });
-
-
+// Register the JwtTokenService for generating tokens
 builder.Services.AddScoped<JwtTokenService>();
 
-
-// builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-//         .AddEntityFrameworkStores<SkillSnapContext>();
-
+// Register Identity services
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddSignInManager<SignInManager<ApplicationUser>>() // 👈 Add this
     .AddEntityFrameworkStores<SkillSnapContext>()
     .AddDefaultTokenProviders();
-    
-// builder.Services.ConfigureApplicationCookie(options =>
-// {
-//     options.Events.OnRedirectToLogin = context =>
-//     {
-//         context.Response.StatusCode = 401;
-//         return Task.CompletedTask;
-//     };
-//     options.Events.OnRedirectToAccessDenied = context =>
-//     {
-//         context.Response.StatusCode = 403;
-//         return Task.CompletedTask;
-//     };
-// });
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -135,6 +112,7 @@ using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
     await seeder.SeedAsync();
+    //await seeder.SeedUsersAsync();
 }
 
 // Configure the HTTP request pipeline.
@@ -147,30 +125,10 @@ app.UseHttpsRedirection();
 
 // Enable CORS
 app.UseCors("AllowClient");
-
-// app.Use(async (context, next) =>
-// {
-//     var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-//     Console.WriteLine($"🔍 Incoming Authorization header: {authHeader}");
-//     await next();
-// });
-
 app.UseAuthentication(); // 👈 before UseAuthorization
 app.UseAuthorization();
 
-// app.Use(async (context, next) =>
-// {
-//     await next();
-
-//     if (context.Response.StatusCode == 401)
-//     {
-//         Console.WriteLine("⚠️  401 Unauthorized response returned.");
-//     }
-// });
-
-
 app.MapControllers();
-
 
 app.Run();
 #endregion

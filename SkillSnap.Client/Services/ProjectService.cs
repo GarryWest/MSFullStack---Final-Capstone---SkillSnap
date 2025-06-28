@@ -14,7 +14,7 @@ public class ProjectService
         _httpClient = httpClient;
     }
 
-    public async Task<List<Project>?> GetProjectsAsync()
+    public async Task<List<ProjectDto>?> GetProjectsAsync()
     {
         try
         {
@@ -30,7 +30,7 @@ public class ProjectService
             }
 
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<Project>>();
+            return await response.Content.ReadFromJsonAsync<List<ProjectDto>>();
         }
         catch (Exception ex)
         {
