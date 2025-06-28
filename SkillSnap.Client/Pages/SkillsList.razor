@@ -29,7 +29,7 @@ else
                 <tr>
                     <td>@skill.Name</td>
                     <td>@skill.Level</td>
-                    <td>@skill.PortfolioUser?.Name</td>
+                    <td>@skill.PortfolioUserName</td>
                 </tr>
             }
         </tbody>
@@ -39,7 +39,7 @@ else
 @code {
     [Parameter] public bool RefreshRequested { get; set; }
 
-    private List<Skill>? skills;
+    private List<SkillDto>? skills;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -53,12 +53,12 @@ else
     {
         try
         {
-            skills = await SkillService.GetSkillsAsync();
+            skills = await SkillService.GetSkillsMineAsync();
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading skills: {ex.Message}");
-            skills = new List<Skill>();
+            skills = new List<SkillDto>();
         }
     }
 

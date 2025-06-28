@@ -39,6 +39,31 @@ public class ProjectService
         }
     }
 
+    public async Task<List<ProjectDto>?> GetProjectsMineAsync()
+    {
+        try
+        {
+            var requestUri = "api/projects/mine";
+            Console.WriteLine($"[ProjectService] Sending GET to: {_httpClient.BaseAddress}{requestUri}");
+
+            var response = await _httpClient.GetAsync(requestUri);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                OnUnauthorized?.Invoke();
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<ProjectDto>>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching projects: {ex.Message}");
+            return null;
+        }
+    }
+
     public async Task<Project?> AddProjectAsync(Project project)
     {
         try

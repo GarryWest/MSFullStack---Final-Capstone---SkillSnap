@@ -58,7 +58,7 @@ else
         {   
             ProjectService.OnUnauthorized += HandleUnauthorized;
 
-            projects = await ProjectService.GetProjectsAsync();
+            projects = await ProjectService.GetProjectsMineAsync();
         }
         catch (Exception ex)
         {

@@ -32,19 +32,16 @@ namespace SkillSnap.Api.Controllers
             // Console.WriteLine($"👤 Roles: {string.Join(", ", User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value))}");
 
 
-            Console.WriteLine("Retrieving projects...");
+            Console.WriteLine("Retrieving all projects...");
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             const string cacheKey = "all_projects";
-            var projects = new List<ProjectDto>();
 
             if (_cache.TryGetValue(cacheKey, out List<ProjectDto>? cachedProjects))
             {
-                Console.WriteLine("✅ Returning projects from cache.");
-                projects = cachedProjects ?? new List<ProjectDto>();
                 stopwatch.Stop();
-                Console.WriteLine($"Retrieved {projects!.Count} projects from cache in {stopwatch.ElapsedMilliseconds} ms");
-                return Ok(projects);
+                Console.WriteLine($"Retrieved {cachedProjects!.Count} projects from cache in {stopwatch.ElapsedMilliseconds} ms");
+                return Ok(cachedProjects);
             }
 
             Console.WriteLine("🔄 Cache miss, querying database...");
@@ -53,8 +50,92 @@ namespace SkillSnap.Api.Controllers
             // Use AsNoTracking for read-only queries to improve performance
             // Use Include to eagerly load related PortfolioUser data
             // Use Select to project into a DTO for better performance and reduced data transfer
-            projects = await _context.Projects
+            var projects = await _context.Projects
                 .AsNoTracking()
+                .Include(p => p.PortfolioUser)
+                .Select(p => new ProjectDto
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    ImageUrl = p.ImageUrl,
+                    PortfolioUserName = p.PortfolioUser != null ? p.PortfolioUser.Name : "Unassigned"
+                })
+                .ToListAsync();
+
+            stopwatch.Stop();
+            Console.WriteLine($"Retrieved {projects.Count} projects in {stopwatch.ElapsedMilliseconds} ms");
+
+            _cache.Set(cacheKey, projects, GetDefaultCacheOptions());
+
+            return Ok(projects);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public IActionResult Add(Project project)
+        {
+            _context.Projects.Add(project);
+            _context.SaveChanges();
+            _cache.Remove("all_projects"); // Invalidate cache after adding a new project
+
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(userIdClaim))
+            {
+                // Find the PortfolioUser associated with the current ApplicationUser
+                var portfolioUserId = _context.PortfolioUsers
+                    .Where(p => p.ApplicationUserId == userIdClaim)
+                    .Select(p => p.Id)
+                    .FirstOrDefault();
+
+                if (portfolioUserId != 0)
+                    _cache.Remove($"projects_user_{portfolioUserId}");
+            }
+
+            return CreatedAtAction(nameof(GetAll), new { id = project.Id }, project);
+        }
+
+        [Authorize]
+        [HttpGet("mine")]
+        public async Task<IActionResult> GetMyProjects()
+        {
+
+            Console.WriteLine("Retrieving current user's projects...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized();
+
+            // Find the PortfolioUser associated with the current ApplicationUser
+            var portfolioUserId = _context.PortfolioUsers
+                .Where(p => p.ApplicationUserId == userIdClaim)
+                .Select(p => p.Id)
+                .FirstOrDefault();
+
+            if (portfolioUserId == 0)
+                return NotFound("No portfolio found for this user.");
+
+            var cacheKey = $"projects_user_{portfolioUserId}";
+
+            if (_cache.TryGetValue(cacheKey, out List<ProjectDto>? cachedProjects))
+            {
+                stopwatch.Stop();
+                Console.WriteLine($"Retrieved {cachedProjects!.Count} projects from cache in {stopwatch.ElapsedMilliseconds} ms");
+                return Ok(cachedProjects);
+            }
+
+            Console.WriteLine("🔄 Cache miss, querying database...");
+
+            // Retrieve projects with related PortfolioUser
+            // Use AsNoTracking for read-only queries to improve performance
+            // Use Include to eagerly load related PortfolioUser data
+            // Use Select to project into a DTO for better performance and reduced data transfer
+            var projects = await _context.Projects
+                .AsNoTracking()
+                .Where(p => p.PortfolioUserId == portfolioUserId)
                 .Include(p => p.PortfolioUser)
                 .Select(p => new ProjectDto
                 {
@@ -73,24 +154,16 @@ namespace SkillSnap.Api.Controllers
                 Console.WriteLine("⚠️ No projects found.");
                 return Ok(projects);
             }
-            // Cache the projects for 5 minutes
-            var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
-                .SetSlidingExpiration(TimeSpan.FromMinutes(2))
-                .SetSize(1); // optional if using size-based eviction
 
-            _cache.Set(cacheKey, projects, cacheOptions);
+            _cache.Set(cacheKey, projects, GetDefaultCacheOptions());
 
             return Ok(projects);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpPost]
-        public IActionResult Add(Project project)
-        {
-            _context.Projects.Add(project);
-            _context.SaveChanges();
-            return CreatedAtAction(nameof(GetAll), new { id = project.Id }, project);
-        }
+        private MemoryCacheEntryOptions GetDefaultCacheOptions() =>
+            new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
+                .SetSlidingExpiration(TimeSpan.FromMinutes(2))
+                .SetSize(1);
     }
 }

@@ -12,11 +12,18 @@ public class SkillService
         _httpClient = httpClient;
     }
 
-    public async Task<List<Skill>> GetSkillsAsync()
+    public async Task<List<SkillDto>> GetSkillsAsync()
     {
         var response = await _httpClient.GetAsync("api/skills");
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<List<Skill>>();
+        return await response.Content.ReadFromJsonAsync<List<SkillDto>>();
+    }
+
+    public async Task<List<SkillDto>> GetSkillsMineAsync()
+    {
+        var response = await _httpClient.GetAsync("api/skills/mine");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<SkillDto>>();
     }
 
     public async Task<Skill> AddSkillAsync(Skill skill)

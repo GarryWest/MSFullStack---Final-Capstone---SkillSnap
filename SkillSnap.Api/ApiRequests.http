@@ -7,3 +7,31 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhOTE3ODNhY
 GET http://localhost:5072/api/test
 Accept: application/json    
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhOTE3ODNhYy1hZDkwLTQxYzMtYjM2YS1lMjc0ZTMzNjRjNjEiLCJlbWFpbCI6ImFkbWluQHNraWxsc25hcC5pbyIsImp0aSI6IjFkYWJkNmIzLTY2YjAtNDQ0Zi1hODg3LWVmMjM3NzVkZWY3NyIsImlzcyI6IlNraWxsU25hcC5BcGkiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc1MTA3ODAwNiwiYXVkIjoiU2tpbGxTbmFwLkNsaWVudCJ9.mDjlem1TBQcHi2yTgpF8MFNHhIwqHpASZwqa68pmZaQ
+
+### 🔐 Get JWT token (replace with actual login credentials)
+POST http://localhost:5072/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "YourSecurePassword123!"
+}
+
+### 📥 Get all skills (requires JWT)
+GET http://localhost:5072/api/skills
+Authorization: Bearer {{jwt}}
+
+### 📥 Get current user's skills
+GET http://localhost:5072/api/skills/mine
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMmIzYjAwOS1jYzVmLTRhNmItODBkMy03ZWM5MTE2NmEzNTgiLCJlbWFpbCI6InRlc3RAc2tpbGxzbmFwLmlvIiwianRpIjoiMThmYzI2NzAtMGRmOS00MjQ4LWE1ZWQtOGRhMGI4ZDQyMGU0IiwiaXNzIjoiU2tpbGxTbmFwLkFwaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWVpZGVudGlmaWVyIjoiMjJiM2IwMDktY2M1Zi00YTZiLTgwZDMtN2VjOTExNjZhMzU4IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoidGVzdEBza2lsbHNuYXAuaW8iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidGVzdEBza2lsbHNuYXAuaW8iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJVc2VyIiwiZXhwIjoxNzUxMTM1Mjk0LCJhdWQiOiJTa2lsbFNuYXAuQ2xpZW50In0.IIa0U9B_U3yqeTkvT28APA_td2vaVU8ZJY7kYfNqnWE
+
+### ➕ Add a new skill (Admin only)
+POST http://localhost:5072/api/skills
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "name": "Blazor",
+  "level": "Advanced",
+  "portfolioUserId": 1
+}
