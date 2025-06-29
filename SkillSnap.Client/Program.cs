@@ -36,5 +36,8 @@ builder.Services.AddHttpClient<SkillService>(client =>
 // Register UserStateService to manage user state
 builder.Services.AddScoped<UserStateService>();
 
+// Register ProjectService as a scoped service
+builder.Services.AddScoped<IProjectService, ProjectService>();
+
 
 await builder.Build().RunAsync();

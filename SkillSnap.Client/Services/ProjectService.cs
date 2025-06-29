@@ -3,7 +3,7 @@ using SkillSnap.Shared.Models;
 
 namespace SkillSnap.Client.Services;
 
-public class ProjectService
+public class ProjectService : IProjectService
 {
     private readonly HttpClient _httpClient;
 
