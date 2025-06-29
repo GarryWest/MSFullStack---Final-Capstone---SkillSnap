@@ -4,63 +4,67 @@ using Microsoft.EntityFrameworkCore;
 using SkillSnap.Api.Data;
 using SkillSnap.Shared.Models;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.Extensions.Options;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly Action<List<Claim>>? _mutateClaims;
+
+    public CustomWebApplicationFactory(Action<List<Claim>>? mutateClaims = null)
+    {
+        _mutateClaims = mutateClaims;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Testing"); // 👈 This skips SQLite registration
-
+        builder.UseEnvironment("Testing");
 
         builder.ConfigureServices(services =>
         {
-            // Remove the existing authentication scheme
-            var authSchemeDescriptor = services
-                .FirstOrDefault(d => d.ServiceType == typeof(AuthenticationSchemeOptions) &&
-                                     d.ImplementationType == typeof(TestAuthHandler));
-            if (authSchemeDescriptor != null)
-            {
-                services.Remove(authSchemeDescriptor);
-            }
-            // Register the test authentication handler
-            // This is a custom handler that simulates authentication for testing purposes
-            services.AddAuthentication(TestAuthHandler.Scheme)
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                TestAuthHandler.Scheme, options => { });
+            // Replace DbContext with in-memory
+            var descriptors = services.Where(
+                d => d.ServiceType == typeof(DbContextOptions<SkillSnapContext>) ||
+                     d.ServiceType == typeof(SkillSnapContext)).ToList();
 
-            services.AddAuthorization(options =>
-            {
-                options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .AddAuthenticationSchemes(TestAuthHandler.Scheme)
-                    .RequireAuthenticatedUser()
-                    .Build();
-            });
-
-
-            // Remove all SkillSnapContext registrations
-            var dbContextDescriptors = services
-                .Where(d => d.ServiceType == typeof(DbContextOptions<SkillSnapContext>) ||
-                            d.ServiceType == typeof(SkillSnapContext))
-                .ToList();
-
-            foreach (var descriptor in dbContextDescriptors)
-            {
+            foreach (var descriptor in descriptors)
                 services.Remove(descriptor);
-            }
 
-            // Register in-memory database
             services.AddDbContext<SkillSnapContext>(options =>
             {
                 options.UseInMemoryDatabase("TestDb");
             });
 
-            // Ensure the service provider is rebuilt
-            var sp = services.BuildServiceProvider();
+            services.AddSingleton(_mutateClaims ?? (_ => { }));
 
-            // Seed test data
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = TestAuthHandler.Scheme;
+                options.DefaultAuthenticateScheme = TestAuthHandler.Scheme;
+                options.DefaultChallengeScheme = TestAuthHandler.Scheme;
+            })
+            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                TestAuthHandler.Scheme, options => { });
+
+            services.AddSingleton<IAuthenticationHandlerProvider, CustomHandlerProvider>();
+
+            services.AddSingleton<IPostConfigureOptions<AuthenticationSchemeOptions>>(sp =>
+            {
+                return new PostConfigureOptions<AuthenticationSchemeOptions>(TestAuthHandler.Scheme, opts => { });
+            });
+
+            services.AddAuthorization(options =>
+             {
+                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                     .AddAuthenticationSchemes(TestAuthHandler.Scheme)
+                     .RequireAuthenticatedUser()
+                     .Build();
+             });
+
+            // Seed data
+            var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<SkillSnapContext>();
             db.Database.EnsureCreated();
@@ -70,15 +74,18 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
     private void SeedTestData(SkillSnapContext context)
     {
+        context.Projects.RemoveRange(context.Projects);
+        context.PortfolioUsers.RemoveRange(context.PortfolioUsers);
+        context.SaveChanges();
+
         var testUser = new PortfolioUser
         {
             Id = 1,
             Name = "Test User",
-            ApplicationUserId = "test-user-id" // must match the claim in TestAuthHandler
+            ApplicationUserId = "test-user-id"
         };
 
         context.PortfolioUsers.Add(testUser);
-
         context.Projects.Add(new Project
         {
             Title = "User Project",
