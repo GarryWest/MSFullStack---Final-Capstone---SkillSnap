@@ -86,8 +86,7 @@ builder.Services.AddOpenApi();
 
 // Register the DbContext with SQLite
 // Ensure you have the Microsoft.EntityFrameworkCore.Sqlite package installed
-builder.Services.AddDbContext<SkillSnapContext>(options =>
-options.UseSqlite(config.GetConnectionString("DefaultConnection")));
+builder.Services.AddSkillSnapDb(builder.Configuration, builder.Environment);
 
 builder.Services.AddCors(options =>
 {
@@ -131,4 +130,28 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+#endregion
+
+#region Tests support
+// This partial class allows the Program class to be accessible in tests
+public partial class Program { } // 👈 This makes Program accessible to tests
+
+// This extension method is used to configure the database context for SkillSnap
+// It allows for different configurations based on the environment
+public static class DatabaseConfig
+{
+    public static void AddSkillSnapDb(this IServiceCollection services, IConfiguration config, IWebHostEnvironment env)
+    {
+        if (env.IsEnvironment("Testing"))
+        {
+            // Skip SQLite in tests — in-memory will be injected by the test factory
+            return;
+        }
+
+        services.AddDbContext<SkillSnapContext>(options =>
+        {
+            options.UseSqlite(config.GetConnectionString("DefaultConnection"));
+        });
+    }
+}
 #endregion
