@@ -1,43 +1,42 @@
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SkillSnap.Client;
 using SkillSnap.Client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Register HttpClient for API calls
+// auth + state
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
-    provider.GetRequiredService<CustomAuthStateProvider>());
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 
+// your JWT delegating handler
 builder.Services.AddTransient<JwtAuthorizationMessageHandler>();
 
-builder.Services.AddHttpClient<AuthService>(client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5072/");
-});
+// ──────────────────────────────────────────────────────────────────────────────
+// 1) Register ONE named HttpClient with BaseAddress + JWT handler
+// ──────────────────────────────────────────────────────────────────────────────
+const string ApiClientName = "SkillSnapApi";
+builder.Services
+  .AddHttpClient(ApiClientName, client =>
+  {
+      client.BaseAddress = new Uri("http://localhost:5072/");
+  })
+  .AddHttpMessageHandler<JwtAuthorizationMessageHandler>()
 
-builder.Services.AddHttpClient<ProjectService>(client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5072/");
-})
-.AddHttpMessageHandler<JwtAuthorizationMessageHandler>();
+  // ────────────────────────────────────────────────────────────────────────────
+  // 2) “Attach” your typed clients to that single pipeline
+  // ────────────────────────────────────────────────────────────────────────────
+  .AddTypedClient<AuthService>()
+  .AddTypedClient<IProjectService, ProjectService>()
+  .AddTypedClient<SkillService>()
+  .AddTypedClient<IPortfolioUserService, PortfolioUserService>()
+  ;
 
-builder.Services.AddHttpClient<SkillService>(client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5072/");
-})
-.AddHttpMessageHandler<JwtAuthorizationMessageHandler>();
-
-// Register UserStateService to manage user state
+// ──────────────────────────────────────────────────────────────────────────────
+// 3) Any other scoped/transient/non-HTTP services
+// ──────────────────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<UserStateService>();
-
-// Register ProjectService as a scoped service
-builder.Services.AddScoped<IProjectService, ProjectService>();
-
 
 await builder.Build().RunAsync();

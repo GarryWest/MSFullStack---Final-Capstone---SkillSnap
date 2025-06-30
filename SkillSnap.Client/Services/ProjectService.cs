@@ -12,6 +12,7 @@ public class ProjectService : IProjectService
     public ProjectService(HttpClient httpClient)
     {
         _httpClient = httpClient;
+        Console.WriteLine($"[ProjectService] HttpClient BaseAddress set to: {_httpClient.BaseAddress}");
     }
 
     public async Task<List<ProjectDto>?> GetProjectsAsync()

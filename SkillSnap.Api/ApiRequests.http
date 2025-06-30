@@ -1,7 +1,43 @@
+
+@jwt_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMmIzYjAwOS1jYzVmLTRhNmItODBkMy03ZWM5MTE2NmEzNTgiLCJlbWFpbCI6InRlc3RAc2tpbGxzbmFwLmlvIiwianRpIjoiNmQwNTJkNGMtOGI1Yi00NjRjLTgxYmEtNDVhYWUzNDk3OThiIiwiaXNzIjoiU2tpbGxTbmFwLkFwaSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWVpZGVudGlmaWVyIjoiMjJiM2IwMDktY2M1Zi00YTZiLTgwZDMtN2VjOTExNjZhMzU4IiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoidGVzdEBza2lsbHNuYXAuaW8iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidGVzdEBza2lsbHNuYXAuaW8iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJVc2VyIiwiZXhwIjoxNzUxMzA1MTA5LCJhdWQiOiJTa2lsbFNuYXAuQ2xpZW50In0.QWTNT1SOdetC5k6rKX8SaD_WjwhFSQzb_9rd0LgbRBc
+
+### 🔐 Get JWT token (replace with actual login credentials)
+POST http://localhost:5072/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@skillsnap.io",
+  "password": "Admin*123"
+}
+
+### Get a portfolio user by username (requires auth)
+GET http://localhost:5072/api/PortfolioUser/Test User
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+### Get all portfolio users (requires auth)
+GET http://localhost:5072/api/PortfolioUser
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+
+### Update portfolio user (requires auth)
+POST http://localhost:5072/api/PortfolioUser/update
+Authorization: Bearer {{jwt_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Test User",
+  "bio": "Updated bio from REST client",
+  "profileImageUrl": "https://example.com/images/testuser.jpg"
+}
+
+
 ###
-GET http://localhost:5072/api/Projects
+GET http://localhost:5072/api/Projects/mine
 Accept: application/json    
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhOTE3ODNhYy1hZDkwLTQxYzMtYjM2YS1lMjc0ZTMzNjRjNjEiLCJlbWFpbCI6ImFkbWluQHNraWxsc25hcC5pbyIsImp0aSI6ImZhMTE4NDZmLTZmYjAtNGQ1NC1hMDBiLTdiOGIzM2MxNGZlNiIsImlzcyI6IlNraWxsU25hcC5BcGkiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc1MTA3NzY1NSwiYXVkIjoiU2tpbGxTbmFwLkNsaWVudCJ9.8NeL9dQ9PjeZUBT13J6aFp2cFFA9SDMhz3rKD03iDDg
+Authorization: Bearer {{jwt_token}}
 
 ###
 GET http://localhost:5072/api/test
@@ -16,6 +52,13 @@ Content-Type: application/json
   "email": "admin@example.com",
   "password": "YourSecurePassword123!"
 }
+
+### Get a portfolio user by username (requires auth)
+GET http://localhost:5072/api/PortfolioUser/TestUser
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+
 
 ### 📥 Get all skills (requires JWT)
 GET http://localhost:5072/api/skills

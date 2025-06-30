@@ -1,3 +1,5 @@
+namespace SkillSnap.Shared.Models;
+
 public class ProjectDto
 {
     public int Id { get; set; }

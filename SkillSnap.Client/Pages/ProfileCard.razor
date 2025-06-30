@@ -1,8 +1,68 @@
-@* A simple profile card layout *@
-<div class="card shadow-sm" style="width: 18rem;">
-    <img src="https://via.placeholder.com/150" class="card-img-top" alt="Profile Picture">
+@page "/profilecard"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using SkillSnap.Client.Services
+@using SkillSnap.Shared.Models
+@inject IPortfolioUserService PortfolioUserService
+@inject NavigationManager NavigationManager
+
+
+<h3>My Profile</h3>
+
+@if (_isLoading)
+{
+  <p>Loading profile…</p>
+}
+else if (_profile == null)
+{
+  <p class="text-danger">Profile not found.</p>
+}
+else
+{
+  <div class="card" style="width: 18rem;">
+    <img src="@_profile.ProfileImageUrl"
+         class="card-img-top"
+         alt="Profile image of @_profile.Name" />
+
     <div class="card-body">
-        <h5 class="card-title">John Doe</h5>
-        <p class="card-text">Software developer with a passion for clean code and creative problem-solving.</p>
+      <h5 class="card-title">@_profile.Name</h5>
+      <p class="card-text">@_profile.Bio</p>
     </div>
-</div>
+  </div>
+}
+
+@code {
+
+    [CascadingParameter] 
+    private Task<AuthenticationState> AuthState { get; set; }
+    private PortfolioUserDto? _profile;
+    private bool _isLoading = true;
+    private Action? _onUnauthorizedHandler;
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Wire up Unauthorized callback → redirect to login
+        _onUnauthorizedHandler = () => NavigationManager.NavigateTo("/login");
+        PortfolioUserService.OnUnauthorized += _onUnauthorizedHandler;
+
+        // Get the current auth state
+        var authState = await AuthState;
+        var user = authState.User;
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+        NavigationManager.NavigateTo("/login");
+        return;
+        }
+
+        // Get the current user's PortfolioUser
+        _profile = await PortfolioUserService.GetPortfolioUserMineAsync();
+        _isLoading = false;
+    }
+
+    public void Dispose()
+    {
+        if (_onUnauthorizedHandler != null)
+        PortfolioUserService.OnUnauthorized -= _onUnauthorizedHandler;
+    }
+}

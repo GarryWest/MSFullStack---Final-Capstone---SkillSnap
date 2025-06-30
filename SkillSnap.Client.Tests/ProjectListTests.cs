@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace SkillSnap.Client.Tests;
 
-public class ProjectCardTests : TestContext
+public class ProjectListTests : TestContext
 {
     [Fact]
     public void ProjectList_RendersCorrectly()
